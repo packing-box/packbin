@@ -1,6 +1,6 @@
 
 <p align="center"><img src="https://github.com/packing-box/custom-packer/raw/main/docs/pages/imgs/logo.png" width="150" height="150" style="border-radius:50%;"></p>
-<h1 align="center">--Your sexy tool's name--</h1>
+<h1 align="center">PackBin</h1>
 <h3 align="center">Custom extensible executable packer for experimenting with packing techniques </h3>
 
 <div align="center">
@@ -11,7 +11,9 @@
 
 </div>
 
---Introduction here--
+PackBin is a modular and extensible packer. It is designed with the final objective of handling different executable formats such as PE, Elf or Mach-O. Its architecture allows for activation and deactivation of unpacking stubs by means of plugins definition. Plugins can be used multiple times and in any order deemed useful by the user.
+
+In the current version, the packer implements packing of PE file in both x86 and x64 architectures and plugins for compression (using the deflate algorithm) and xor encryption (using any 1 byte key).
 
 
 ## Installation
