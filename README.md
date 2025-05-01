@@ -76,7 +76,43 @@ Successfully wrote packed file to dist/packed.exe
 ```
 
 ## Contributing
+Contributing can be achieved by many means:
+1. Improving main logic (loader code, packer code, plugin code, etc.)
+2. Implementing other file formats (very heavy: new plugin codes, new compilation, new loader, etc.)
+3. Creating a new plugin (easiest and can improve the value of the packer quickly)
 
+New plugins needs to follow a common format:
+`template.py`
+```py
+class TemplatePlugin:
+	def __init__(self, args):
+		# Check if the argument to the plugin is correct and defined
+		# ie: compression:deflate (is deflate defined ?)
+
+	def run(self, data): # data is the be packed
+		imports = [] # Add needed C imports
+		signatures = [] # Add function's signatures you defined
+		functions = [] # Add function code you want to define
+		section_content = modified(data) # perform the modification
+		stub = """/*----- TEMPLATE STUB START -----*/
+	{
+		// Some C code to do the unpacking. You have access to 2 variables:
+		// 		buf - The buffer pointing to the data to be unpacked
+		//		size - The size of the above-mentionned buffer
+		// At the end of the unpacking stub:
+		//		1. Size should contain the current size of buf
+		//		2. Buf should contain the unpacked data
+	}
+	"""
+		return (
+			section_content,
+			imports,
+			signatures,
+			functions,
+			stub
+		)
+```
+A simple, yet complete example can be taken from the compression plugin.
 
 ## :clap:  Supporters
 
