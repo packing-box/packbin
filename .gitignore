@@ -1,10 +1,4 @@
 *.exe
-*.bak
-*.o
-*.zip
-.vscode
-*.elf
-/*.cpp
-raw_size_editor
-exe/*
 docs/site/*
+__pycache__
+.venv
