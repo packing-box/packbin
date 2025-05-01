@@ -15,26 +15,67 @@ PackBin is a modular and extensible packer. It is designed with the final object
 
 In the current version, the packer implements packing of PE file in both x86 and x64 architectures and plugins for compression (using the deflate algorithm) and xor encryption (using any 1 byte key).
 
+## Requirements
+
+- [Docker](https://www.docker.com/) installed and running.
 
 ## Installation
 
---Instructions here--
+Clone the PackBin repository and build the Docker image:
+```bash
+git clone https://github.com/packing-box/custom-packer.git
+cd packbin
+sudo docker build -t packer .
+```
 
+Run the Docker container with volume bindings for source and output files:
+```bash
+sudo docker run -it --rm -v $(pwd)/src:/app/src -v $(pwd)/dist:/app/dist packer
+```
 
 ## Usage
 
---Help message with banner here--
+Inside the container, you can run the following to see the available options:
+```bash
+root@container:/app/src# python3 main.py -h
+usage: main.py [-h] --input INPUT [--plugins PLUGINS]
 
+Modular Packer with Plugins
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT, -i INPUT
+                        Input file
+  --plugins PLUGINS, -p PLUGINS
+                        Comma-separated list of plugins
+```
 
 ### Example of usage
 
-`tool input.exe`
+Basic usage:
 
+```bash
+python3 main.py -i <input>
+python3 main.py -i <input> -p <plugins>
 ```
-<<snipped>>
 
-<<traceback here>>
+Practical examples:
+```bash
+python3 main.py -i input.exe
+# No plugin — simple embedding
+python3 main.py -i input.exe -p xor:0xAA
+# Single plugin — XOR encoding with 0xAA key
+python3 main.py -i input.exe -p xor:0xAA,compression:deflate,xor:0x53
+# Chained plugins — XOR -> compression -> XOR
 ```
+
+If successful, you should see:
+```
+Successfully parsed executable file: input.exe
+Successfully wrote packed file to dist/packed.exe
+```
+
+## Contributing
 
 
 ## :clap:  Supporters
