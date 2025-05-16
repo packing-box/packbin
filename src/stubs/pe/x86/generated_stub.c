@@ -3,10 +3,6 @@
 #include <zlib.h>
 
 void* load_PE (char* PE_data);
-
-int mystrcmp(char* a, char* b);
-void mymemcpy(char* dst, char* src, unsigned int size);
-void mymemset(char* dst, char c, unsigned int size);
 char* unpack_data(char* src, DWORD *psize);
 void decompress(void *compressed, size_t length, void *decompressed, size_t decompressed_length);
 
@@ -24,7 +20,7 @@ int _start(void) {
 
 	// search for the ".packed" section
 	for(int i=0; i<p_NT_HDR->FileHeader.NumberOfSections; ++i) {
-		if (mystrcmp(sections[i].Name, packed_section_name)) {
+		if (strcmp(sections[i].Name, packed_section_name) == 0) {
 			packed_PE = packer_virtual_address + sections[i].VirtualAddress;
 			break;
 		}
@@ -63,7 +59,7 @@ void* load_PE (char* PE_data) {
 	DWORD oldProtect;
 	//The PE header is readonly, we have to make it writable to be able to change it
 	VirtualProtect(ImageBase, p_NT_HDR->OptionalHeader.SizeOfHeaders, PAGE_READWRITE, &oldProtect);
-	mymemcpy(ImageBase, PE_data, p_NT_HDR->OptionalHeader.SizeOfHeaders);
+	memcpy(ImageBase, PE_data, p_NT_HDR->OptionalHeader.SizeOfHeaders);
 
 	// For each sections
 	for(int i=0; i<p_NT_HDR->FileHeader.NumberOfSections; ++i) {
@@ -76,11 +72,11 @@ void* load_PE (char* PE_data) {
 			// A VirtualProtect to be sure we can write in the allocated section
 			VirtualProtect(dest, sections[i].SizeOfRawData, PAGE_READWRITE, &oldProtect);
 			// We copy SizeOfRaw data bytes, from the offset PointertoRawData in the file
-			mymemcpy(dest, PE_data + sections[i].PointerToRawData, sections[i].SizeOfRawData);
+			memcpy(dest, PE_data + sections[i].PointerToRawData, sections[i].SizeOfRawData);
 		} else {
 			// if no raw data to copy, we just put zeroes, based on the VirtualSize
 			VirtualProtect(dest, sections[i].Misc.VirtualSize, PAGE_READWRITE, &oldProtect);
-			mymemset(dest, 0, sections[i].Misc.VirtualSize);
+			memset(dest, 0, sections[i].Misc.VirtualSize);
 		}
 	}
 
@@ -240,6 +236,17 @@ char* unpack_data(char* src, DWORD *psize) {
 		buf = decompressed;
 	}
 	
+	/*----- XOR-0x53 STUB START -----*/
+	{
+		DWORD oldProtect;
+		VirtualProtect(buf, size, PAGE_READWRITE, &oldProtect);
+
+		DWORD key = 0x53;
+		for(DWORD i=0; i<size; ++i) {
+			buf[i] = buf[i] ^ key;
+		}
+	}
+	
 	/*----- DEFLATE STUB START -----*/
 	{
 		DWORD compressed_size = *((DWORD *)buf);         // compressed size little-endian
@@ -256,17 +263,6 @@ char* unpack_data(char* src, DWORD *psize) {
 
 		size = decompressed_size;
 		buf = decompressed;
-	}
-	
-	/*----- XOR-0x53 STUB START -----*/
-	{
-		DWORD oldProtect;
-		VirtualProtect(buf, size, PAGE_READWRITE, &oldProtect);
-
-		DWORD key = 0x53;
-		for(DWORD i=0; i<size; ++i) {
-			buf[i] = buf[i] ^ key;
-		}
 	}
 	
 

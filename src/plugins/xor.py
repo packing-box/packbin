@@ -11,7 +11,7 @@ class XorPlugin:
 			print("Example: xor:0x5F")
 			exit()
 
-	def run(self, data):
+	def run(self, arch, data):
 		section_content = bytes([b ^ int(self.key, 16) for b in data])
 		stub = """/*----- XOR-KEY STUB START -----*/
 	{
@@ -26,6 +26,7 @@ class XorPlugin:
 	""".replace("KEY", self.key)
 		return (
 			section_content,
+			[],
 			[],
 			[],
 			[],

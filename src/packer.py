@@ -32,33 +32,37 @@ class Packer:
 
 		if self.file_format == "pe":
 			if self.arch == "x86":
-				zlib_dir = "../vendor/zlib/build-x86/install-x86"
-				cmd = [
+				compilation_cmd = [
 					"i686-w64-mingw32-gcc", f"{self.stub_path}generated_stub.c",
 					"-o", f"{self.stub_path}stub.exe",
-					*more_parameters,
+					*set(more_parameters),
 					"-Wl,--entry=__start",  # Define the entry point
-					"-nostartfiles",
-					"-fno-ident", "-fno-asynchronous-unwind-tables",  # Remove unnecessary sections
-					f"-I{zlib_dir}/include",
-					f"-L{zlib_dir}/lib",
-					"-lkernel32",  # Add necessary imports
-					"-lz"
+					"-nostartfiles", "-nostdlib",
+					"-lmsvcrt", "-lkernel32", "-luser32", # memcpy, strcmp, etc + win api calls
+					"-fno-ident", "-fno-asynchronous-unwind-tables", "-fno-exceptions",  # Remove unnecessary sections
+					"-g0"
+				]
+				strip_cmd = [
+					"i686-w64-mingw32-strip",
+					"--strip-all",
+					f"{self.stub_path}stub.exe"
 				]
 			elif self.arch == "x64":
-				zlib_dir = "../vendor/zlib/build-x64/install-x64"
-				cmd = [
+				compilation_cmd = [
 					"x86_64-w64-mingw32-gcc", f"{self.stub_path}generated_stub.c",
 					"-o", f"{self.stub_path}stub.exe",
-					*more_parameters,
+					*set(more_parameters),
 					"-Wl,--entry=_start",  # Define the entry point
 					# We remove an _ because of: https://learn.microsoft.com/en-us/cpp/build/reference/decorated-names?view=msvc-170#FormatC
-					"-nostartfiles",
-					"-fno-ident", "-fno-asynchronous-unwind-tables",  # Remove unnecessary sections
-					f"-I{zlib_dir}/include",
-					f"-L{zlib_dir}/lib",
-					"-lkernel32",  # Add necessary imports
-					"-lz"
+					"-nostartfiles", "-nostdlib",
+					"-lmsvcrt", "-lkernel32", "-luser32", # memcpy, strcmp, etc + win api calls
+					"-fno-ident", "-fno-asynchronous-unwind-tables", "-fno-exceptions",  # Remove unnecessary sections
+					"-g0"
+				]
+				strip_cmd = [
+					"x86_64-w64-mingw32-strip",
+					"--strip-all",
+					f"{self.stub_path}stub.exe"
 				]
 			else:
 				print(f"Unknown architecture {self.arch}")
@@ -69,24 +73,27 @@ class Packer:
 		else:
 			print(f"Unknown file format {self.file_format}")
 
-		#print(" ".join(cmd))
-		subprocess.run(cmd)
+		#print(" ".join(compilation_cmd))
+		subprocess.run(compilation_cmd)
+		subprocess.run(strip_cmd)
 
 	def main(self, plugins):
+		compile_parameters = []
 		for plugin in plugins:
-			self.raw, imports, signs, funcs, unpack_code = plugin.run(self.raw)
+			self.raw, compil, imports, signs, funcs, unpack_code = plugin.run(self.arch, self.raw)
+			compile_parameters += compil
 			self.stub_alterations["imports"] += imports
 			self.stub_alterations["signatures"] += signs
 			self.stub_alterations["functions"] += funcs
-			self.stub_alterations["unpacking_code"].insert(0, unpack_code) #Stubs needs to be executed in reverse order
+			self.stub_alterations["unpacking_code"].insert(0, unpack_code) # Stubs needs to be executed in reverse order
 
 		has_aslr = (self.file.optional_header.dll_characteristics & lief.PE.OptionalHeader.DLL_CHARACTERISTICS.DYNAMIC_BASE != 0)
 		if has_aslr:
-			self.compile_stub()
+			self.compile_stub(compile_parameters)
 			stub = lief.PE.parse(f"{self.stub_path}stub.exe")
 			packed = stub # we can use the current state of stub as our output
 		else:
-			compile_parameters = ["-Wl,--disable-dynamicbase", "-Wl,--disable-reloc-section"] # Disable relocations
+			compile_parameters += ["-Wl,--disable-dynamicbase", "-Wl,--disable-reloc-section"] # Disable relocations
 			self.compile_stub(compile_parameters)
 			stub = lief.PE.parse(f"{self.stub_path}stub.exe")
 			# We need to modify the stub and add a section just after the headers

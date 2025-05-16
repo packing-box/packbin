@@ -1,14 +1,11 @@
 #include <windows.h>
 #include <winnt.h>
-
+#include <string.h>
+#include <zlib.h>
 
 void* load_PE (char* PE_data);
-
-int mystrcmp(char* a, char* b);
-void mymemcpy(char* dst, char* src, unsigned int size);
-void mymemset(char* dst, char c, unsigned int size);
 char* unpack_data(char* src, DWORD *psize);
-
+void decompress(void *compressed, size_t length, void *decompressed, size_t decompressed_length);
 
 int _start(void) {
 	// Get the current module VA (ie PE header addr)
@@ -24,7 +21,7 @@ int _start(void) {
 
 	// search for the ".packed" section
 	for(int i=0; i<p_NT_HDR->FileHeader.NumberOfSections; ++i) {
-		if (mystrcmp(sections[i].Name, packed_section_name)) {
+		if (strcmp(sections[i].Name, packed_section_name) == 0) {
 			packed_PE = packer_virtual_address + sections[i].VirtualAddress;
 			break;
 		}
@@ -63,7 +60,7 @@ void* load_PE (char* PE_data) {
 	DWORD oldProtect;
 	//The PE header is readonly, we have to make it writable to be able to change it
 	VirtualProtect(ImageBase, p_NT_HDR->OptionalHeader.SizeOfHeaders, PAGE_READWRITE, &oldProtect);
-	mymemcpy(ImageBase, PE_data, p_NT_HDR->OptionalHeader.SizeOfHeaders);
+	memcpy(ImageBase, PE_data, p_NT_HDR->OptionalHeader.SizeOfHeaders);
 
 	// For each sections
 	for(int i=0; i<p_NT_HDR->FileHeader.NumberOfSections; ++i) {
@@ -76,11 +73,11 @@ void* load_PE (char* PE_data) {
 			// A VirtualProtect to be sure we can write in the allocated section
 			VirtualProtect(dest, sections[i].SizeOfRawData, PAGE_READWRITE, &oldProtect);
 			// We copy SizeOfRaw data bytes, from the offset PointertoRawData in the file
-			mymemcpy(dest, PE_data + sections[i].PointerToRawData, sections[i].SizeOfRawData);
+			memcpy(dest, PE_data + sections[i].PointerToRawData, sections[i].SizeOfRawData);
 		} else {
 			// if no raw data to copy, we just put zeroes, based on the VirtualSize
 			VirtualProtect(dest, sections[i].Misc.VirtualSize, PAGE_READWRITE, &oldProtect);
-			mymemset(dest, 0, sections[i].Misc.VirtualSize);
+			memset(dest, 0, sections[i].Misc.VirtualSize);
 		}
 	}
 
@@ -207,39 +204,55 @@ void* load_PE (char* PE_data) {
 	return (void*) (ImageBase + p_NT_HDR->OptionalHeader.AddressOfEntryPoint);
 }
 
-int mystrcmp(char* a, char* b) {
-	while(*a == *b && *a) {
-		a++;
-		b++;
-	}
-	return (*a == *b);
-}
-
-void mymemcpy(char* dst, char* src, unsigned int size) {
-	for(unsigned int i=0; i<size; ++i) {
-		dst[i] = src[i];
-	}
-}
-
-void mymemset(char* dst, char c, unsigned int size) {
-	for(unsigned int i=0; i<size; ++i) {
-		dst[i] = c;
-	}   
-}
-
 char* unpack_data(char* src, DWORD *psize) {
 	char *buf  = src;
 	DWORD size = *psize;
 	
-	/*----- XOR-0xAA STUB START -----*/
+	/*----- DEFLATE STUB START -----*/
+	{
+		DWORD compressed_size = *((DWORD *)buf);         // compressed size little-endian
+		DWORD decompressed_size = *((DWORD *)(buf + 4)); // decompressed size little-endian
+		void *compressed = (void *)(buf + 8);            // compressed buffer
+		void *decompressed = malloc(decompressed_size);  // decompressed buffer
+
+		if (decompressed == NULL) {
+			MessageBoxA(NULL, "memory allocate failed", "malloc", MB_OK);
+			return 0;
+		}
+
+		decompress(compressed, compressed_size, decompressed, decompressed_size);
+
+		size = decompressed_size;
+		buf = decompressed;
+	}
+	
+	/*----- XOR-0x53 STUB START -----*/
 	{
 		DWORD oldProtect;
 		VirtualProtect(buf, size, PAGE_READWRITE, &oldProtect);
 
-		DWORD key = 0xAA;
+		DWORD key = 0x53;
 		for(DWORD i=0; i<size; ++i) {
 			buf[i] = buf[i] ^ key;
 		}
+	}
+	
+	/*----- DEFLATE STUB START -----*/
+	{
+		DWORD compressed_size = *((DWORD *)buf);         // compressed size little-endian
+		DWORD decompressed_size = *((DWORD *)(buf + 4)); // decompressed size little-endian
+		void *compressed = (void *)(buf + 8);            // compressed buffer
+		void *decompressed = malloc(decompressed_size);  // decompressed buffer
+
+		if (decompressed == NULL) {
+			MessageBoxA(NULL, "memory allocate failed", "malloc", MB_OK);
+			return 0;
+		}
+
+		decompress(compressed, compressed_size, decompressed, decompressed_size);
+
+		size = decompressed_size;
+		buf = decompressed;
 	}
 	
 
@@ -247,3 +260,23 @@ char* unpack_data(char* src, DWORD *psize) {
 	return buf;
 }
 
+void decompress(void *compressed, size_t length, void *decompressed, size_t decompressed_length) {
+	z_stream inflate_stream;
+	inflate_stream.zalloc = Z_NULL;
+	inflate_stream.zfree = Z_NULL;
+	inflate_stream.opaque = Z_NULL;
+	inflate_stream.avail_in = (uInt)length;
+	inflate_stream.next_in = (Bytef *)compressed;
+	inflate_stream.avail_out = (uInt)decompressed_length;
+	inflate_stream.next_out = (Bytef *)decompressed;
+	inflateInit(&inflate_stream);
+
+	int err = inflate(&inflate_stream, Z_NO_FLUSH);
+	if (err != Z_STREAM_END) {
+		inflateEnd(&inflate_stream);
+		MessageBoxA(NULL, "zlib decompression failed", "zlib", MB_OK);
+		return;
+	}
+	inflateEnd(&inflate_stream);
+	return;
+}

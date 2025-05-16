@@ -12,12 +12,18 @@ class CompressionPlugin:
 			print("Example: compression:deflate")
 			exit()
 
-	def run(self, data):
+	def run(self, arch, data):
 		original_length = len(data)
 		compressed = zlib.compress(data, 9)
 		compressed_length = len(compressed)
 		section_content = struct.pack('<II', compressed_length, original_length)
 		section_content += compressed
+		zlib_dir = f"/app/vendor/zlib/build-{arch}/install-{arch}"
+		compilation_params = [
+			f"-I{zlib_dir}/include",
+			f"-L{zlib_dir}/lib",
+			"-lz"
+		]
 		decompress_signature = "void decompress(void *compressed, size_t length, void *decompressed, size_t decompressed_length);"
 		decompress_function = """void decompress(void *compressed, size_t length, void *decompressed, size_t decompressed_length) {
 	z_stream inflate_stream;
@@ -59,6 +65,7 @@ class CompressionPlugin:
 	"""
 		return (
 			section_content,
+			compilation_params,
 			["#include <zlib.h>"],
 			[decompress_signature],
 			[decompress_function],
