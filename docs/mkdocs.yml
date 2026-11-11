@@ -1,8 +1,8 @@
 site_author: dhondta
-site_name: PackBin - Custom extensible executable packer
+site_name: Pack-It-Easy! - Custom extensible executable packer
 site_description: Modular and extensible executable packer for experimenting with packing techniques
-site_url: https://custom-packer.readthedocs.io
-repo_url: https://github.com/packing-box/custom-packer
+site_url: https://pack-it-easy.readthedocs.io
+repo_url: https://github.com/packing-box/pack-it-easy
 edit_uri: edit/main/docs/pages/
 copyright: Copyright &copy; 2024 Alexandre D'Hondt, Salma Merkania, Maximilien Laenen
 docs_dir: pages

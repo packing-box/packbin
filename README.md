@@ -1,18 +1,20 @@
 
-<p align="center"><img src="https://github.com/packing-box/custom-packer/raw/main/docs/pages/imgs/logo.png" width="150" height="150" style="border-radius:50%;"></p>
-<h1 align="center">PackBin</h1>
+<p align="center"><img src="https://github.com/packing-box/pack-it-easy/raw/main/docs/pages/imgs/logo.png" width="150" height="150" style="border-radius:50%;"></p>
+<h1 align="center">Pack-It-Easy!</h1>
 <h3 align="center">Custom extensible executable packer for experimenting with packing techniques </h3>
 
 <div align="center">
 
-[![Read The Docs](https://readthedocs.org/projects/custom-packer/badge/?version=latest)](https://custom-packer.readthedocs.io/en/latest/?badge=latest)
-[![Security](https://github.com/packing-box/custom-packer/actions/workflows/security.yml/badge.svg)](https://github.com/packing-box/custom-packer/actions/workflows/security.yml)
+[![Read The Docs](https://readthedocs.org/projects/pack-it-easy/badge/?version=latest)](https://pack-it-easy.readthedocs.io/en/latest/?badge=latest)
+[![Security](https://github.com/packing-box/pack-it-easy/actions/workflows/security.yml/badge.svg)](https://github.com/packing-box/pack-it-easy/actions/workflows/security.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-orange.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Status](https://img.shields.io/badge/status-beta-red.svg)
 
 </div>
 
-PackBin is a modular and extensible packer. It is designed with the final objective of handling different executable formats such as PE, Elf or Mach-O. Its architecture allows for activation and deactivation of unpacking stubs by means of plugins definition. Plugins can be used multiple times and in any order deemed useful by the user.
+[Detect-It-Easy!](https://github.com/horsicq/Detect-It-Easy) is an excellent tool for identifying packers, compilers and protectors in executables, and it sets a high bar for static detection. A good detector deserves a worthy opponent: **Pack-It-Easy!** is that rival packer, built to transform binaries in ways that probe and challenge what static detection can see. The name is a deliberate nod to DIE — where DIE reads the signatures, Pack-It-Easy! rewrites them.
+
+Pack-It-Easy is a modular and extensible packer. It is designed with the final objective of handling different executable formats such as PE, Elf or Mach-O. Its architecture allows for activation and deactivation of unpacking stubs by means of plugins definition. Plugins can be used multiple times and in any order deemed useful by the user.
 
 In the current version, the packer implements packing of PE file in both x86 and x64 architectures and plugins for compression (using the deflate algorithm) and xor encryption (using any 1 byte key).
 
@@ -22,10 +24,10 @@ In the current version, the packer implements packing of PE file in both x86 and
 
 ## Installation
 
-Clone the PackBin repository and build the Docker image:
+Clone the Pack-It-Easy repository and build the Docker image:
 ```bash
-git clone https://github.com/packing-box/custom-packer.git
-cd packbin
+git clone https://github.com/packing-box/pack-it-easy.git
+cd pack-it-easy
 sudo docker build -t packer .
 ```
 
