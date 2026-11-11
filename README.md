@@ -5,7 +5,8 @@
 
 <div align="center">
 
-[![Read The Docs](https://readthedocs.org/projects/custom-packer/badge/?version=latest)](http://custom-packer.readthedocs.io/en/latest/?badge=latest)
+[![Read The Docs](https://readthedocs.org/projects/custom-packer/badge/?version=latest)](https://custom-packer.readthedocs.io/en/latest/?badge=latest)
+[![Security](https://github.com/packing-box/custom-packer/actions/workflows/security.yml/badge.svg)](https://github.com/packing-box/custom-packer/actions/workflows/security.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-orange.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Status](https://img.shields.io/badge/status-beta-red.svg)
 
@@ -113,12 +114,6 @@ class TemplatePlugin:
 		)
 ```
 A simple, yet complete example can be taken from the compression plugin.
-
-## :clap:  Supporters
-
-[![Stargazers repo roster for @packing-box/custom-packer](https://reporoster.com/stars/dark/packing-box/custom-packer)](https://github.com/packing-box/custom-packer/stargazers)
-
-[![Forkers repo roster for @packing-box/custom-packer](https://reporoster.com/forks/dark/packing-box/custom-packer)](https://github.com/packing-box/custom-packer/network/members)
 
 <p align="center"><a href="#"><img src="https://img.shields.io/badge/Back%20to%20top--lightgrey?style=social" alt="Back to top" height="20"/></a></p>
 

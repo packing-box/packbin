@@ -1,4 +1,4 @@
-# Contributing to NotPacked++
+# Contributing to PackBin
 We want to make contributing to this project as easy and transparent as possible.
 
 ## Our Development Process
@@ -17,3 +17,7 @@ Before submitting your pull requests, please ensure that you provided enough inf
 ## Issues
 
 We use GitHub issues to track public bugs. Please ensure your description is clear and has sufficient instructions to be able to reproduce the issue.
+
+## Security
+
+Please do not report security vulnerabilities through public issues. See [SECURITY.md](https://github.com/packing-box/custom-packer/blob/main/SECURITY.md) for how to report them through GitHub's private vulnerability reporting.
